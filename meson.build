@@ -16,6 +16,7 @@ libsdxi_dep = cc.find_library('sdxi',
 
 executable('sdxi',
   'src/sdxi.c',
+  'src/attrs.c',
   'src/cli_cmd.c',
   include_directories : [libsdxi_inc, cli_inc],
   dependencies : [libsdxi_dep],

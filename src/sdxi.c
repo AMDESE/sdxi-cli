@@ -29,6 +29,9 @@ static int sdxi_cmd_version(const char *prog, int argc, char **argv);
 static int sdxi_cmd_help(const char *prog, int argc, char **argv);
 static int sdxi_cmd_devices(const char *prog, int argc, char **argv);
 static int sdxi_cmd_show(const char *prog, int argc, char **argv);
+int sdxi_cmd_attrs(const char *prog, int argc, char **argv);
+int sdxi_cmd_attr(const char *prog, int argc, char **argv);
+int sdxi_cmd_set_attr(const char *prog, int argc, char **argv);
 
 static const char * const help_aliases[] = { "-h", "--help", NULL };
 static const char * const version_aliases[] = { "-v", "--version", NULL };
@@ -38,6 +41,12 @@ static const struct sdxi_cli_cmd base_cmds[] = {
 	  sdxi_cmd_devices, NULL },
 	{ "show", NULL, "Show device info",
 	  "show <device> [--json] [-v|--verbose]", sdxi_cmd_show, NULL },
+	{ "attrs", NULL, "List device attributes",
+	  "attrs <device> [--json]", sdxi_cmd_attrs, NULL },
+	{ "attr", NULL, "Show device attribute",
+	  "attr <device> <attr> [--json]", sdxi_cmd_attr, NULL },
+	{ "set-attr", NULL, "Set device attribute",
+	  "set-attr <device> <attr> <value>", sdxi_cmd_set_attr, NULL },
 	{ "version", version_aliases, "Show program version", "version",
 	  sdxi_cmd_version, NULL },
 	{ "help", help_aliases, "Display this help", "help [command...]",
