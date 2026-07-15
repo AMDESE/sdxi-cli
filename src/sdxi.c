@@ -18,6 +18,7 @@
 #include <libsdxi.h>
 
 #include "cli_cmd.h"
+#include "exts/registry.h"
 
 #define SDXI_VERSION "0.1.0"
 #define SDXI_DESCRIPTION \
@@ -56,12 +57,44 @@ static const struct sdxi_cli_cmd base_cmds[] = {
 
 static const struct sdxi_cli_cmd *find_root_command(const char *name)
 {
-	return sdxi_cli_cmd_find(base_cmds, name);
+	const struct sdxi_cli_cmd *cmd;
+
+	cmd = sdxi_cli_cmd_find(base_cmds, name);
+	if (cmd)
+		return cmd;
+
+	return sdxi_ext_find_vendor(name);
+}
+
+static void print_vendor_list(size_t padding)
+{
+	for (size_t i = 0; i < sdxi_ext_vendor_count(); i++) {
+		const struct sdxi_cli_cmd *cmd = sdxi_ext_vendor_at(i);
+
+		if (!cmd || !cmd->name)
+			continue;
+
+		printf("  %-*s     %s\n", (int)padding, cmd->name,
+		       cmd->desc ? cmd->desc : "");
+	}
 }
 
 static void print_general_help(const char *prog)
 {
 	size_t padding = sdxi_cli_cmd_name_len_max(base_cmds);
+	bool have_vendor = (sdxi_ext_vendor_count() > 0);
+
+	for (size_t i = 0; i < sdxi_ext_vendor_count(); i++) {
+		const struct sdxi_cli_cmd *cmd = sdxi_ext_vendor_at(i);
+		size_t len;
+
+		if (!cmd || !cmd->name)
+			continue;
+
+		len = strlen(cmd->name);
+		if (len > padding)
+			padding = len;
+	}
 
 	printf("%s %s\n", prog, SDXI_VERSION);
 	printf("usage: %s <command> [<args>]\n\n", prog);
@@ -70,6 +103,11 @@ static void print_general_help(const char *prog)
 	printf("Available commands:\n");
 
 	sdxi_cli_cmd_print_list(base_cmds, padding);
+
+	if (have_vendor) {
+		printf("\nVendor extensions:\n");
+		print_vendor_list(padding);
+	}
 
 	printf("\nRun `%s help <command...>` for more details.\n", prog);
 }

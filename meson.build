@@ -14,10 +14,14 @@ libsdxi_dep = cc.find_library('sdxi',
   static : true,
   required : true)
 
+ext_sources = []
+subdir('src/exts')
+
 executable('sdxi',
   'src/sdxi.c',
   'src/attrs.c',
   'src/cli_cmd.c',
+  ext_sources,
   include_directories : [libsdxi_inc, cli_inc],
   dependencies : [libsdxi_dep],
   install : true)
