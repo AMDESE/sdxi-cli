@@ -1,0 +1,3 @@
+[submodule "libsdxi"]
+	path = libsdxi
+	url = https://github.com/AMDESE/libsdxi.git

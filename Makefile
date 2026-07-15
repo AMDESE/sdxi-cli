@@ -1,16 +1,33 @@
-.PHONY: all clean install uninstall dist static help
+.PHONY: all clean install uninstall dist static help submodule
 
 BUILDDIR = builddir
+BUILDDIR_TARGET = $(BUILDDIR)/build.ninja
 PREFIX ?= /usr/local
 DESTDIR ?=
 VERSION = 0.1.0
 PROJECT = sdxi
+SUBMODULE = libsdxi
+SUBMODULE_UPDATE = git -c protocol.file.allow=always submodule update --init --recursive
+LIBSDXI_LIB = $(SUBMODULE)/src/.libs/libsdxi.a
 
-all: $(BUILDDIR)
+all: $(BUILDDIR_TARGET)
 	@meson compile -C $(BUILDDIR)
 
-$(BUILDDIR):
-	@meson setup $(BUILDDIR)
+$(BUILDDIR_TARGET): $(LIBSDXI_LIB)
+	@if [ -d $(BUILDDIR) ]; then \
+		meson setup $(BUILDDIR) --reconfigure || \
+			(rm -rf $(BUILDDIR) && meson setup $(BUILDDIR)); \
+	else \
+		meson setup $(BUILDDIR); \
+	fi
+
+$(SUBMODULE)/.git:
+	@$(SUBMODULE_UPDATE)
+
+$(LIBSDXI_LIB): $(SUBMODULE)/.git
+	@cd $(SUBMODULE) && ./autogen.sh
+	@cd $(SUBMODULE) && ./configure --quiet --with-pic
+	@$(MAKE) -C $(SUBMODULE)
 
 clean:
 	@if [ -d $(BUILDDIR) ]; then \
@@ -61,7 +78,11 @@ help:
 	@echo "  dist      - Create distribution tarball"
 	@echo "  static    - Build static binary"
 	@echo "  help      - Show this help message"
+	@echo "  submodule - Update and fetch submodules"
 	@echo ""
 	@echo "Variables:"
 	@echo "  PREFIX    - Installation prefix (default: /usr/local)"
 	@echo "  DESTDIR   - Destination directory for staged installs"
+
+submodule:
+	@$(SUBMODULE_UPDATE)
