@@ -1,0 +1,22 @@
+Source: sdxi-cli
+Section: utils
+Priority: optional
+Maintainer: SDXI Maintainers <wei.huang2@amd.com>
+Build-Depends: debhelper-compat (= 13),
+               meson (>= 0.61),
+               ninja-build,
+               pkg-config,
+               autoconf,
+               automake,
+               libtool
+Standards-Version: 4.6.2
+Homepage: https://github.com/AMDESE/sdxi-cli
+
+Package: sdxi-cli
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: command-line tool for SDXI devices and drivers
+ sdxi-cli is the user-space command-line interface for SDXI (Smart Data
+ Accelerator Interface) devices. It uses libsdxi to talk to the kernel
+ SDXI driver and exposes device discovery, attribute management, and AMD
+ QoS extensions.

@@ -1,0 +1,5 @@
+sdxi-cli (@VERSION@-1) UNRELEASED; urgency=medium
+
+  * Automated build from sdxi-cli git tree.
+
+ -- SDXI Maintainers <wei.huang2@amd.com>  @CHANGELOG_DATE@

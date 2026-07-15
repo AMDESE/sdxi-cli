@@ -1,0 +1,49 @@
+#!/usr/bin/make -f
+#
+# debian/rules for sdxi-cli.
+#
+# We delegate the binary build to meson via dh, but we need to build the
+# in-tree libsdxi static library first (the meson project links it
+# statically from libsdxi/src/.libs/libsdxi.a).
+
+%:
+	dh $@ --buildsystem=meson
+
+override_dh_auto_configure:
+	cd libsdxi && ./autogen.sh && ./configure --quiet --with-pic
+	$(MAKE) -C libsdxi
+	dh_auto_configure -- --buildtype=plain --wrap-mode=nodownload
+
+# This local package build has no compressed or archived payload that needs
+# normalization, and some RPM-hosted debhelper installs do not ship the helper.
+override_dh_strip_nondeterminism:
+	@:
+
+# On non-Debian hosts, dpkg-shlibdeps cannot map RPM-owned system libraries to
+# Debian packages. Keep the normal scanner when it works; otherwise synthesize
+# the only dependency this statically-libsdxi-linked binary needs.
+override_dh_shlibdeps:
+	@if dh_shlibdeps >debian/dh_shlibdeps.out 2>debian/dh_shlibdeps.err; then \
+		cat debian/dh_shlibdeps.out; \
+		rm -f debian/dh_shlibdeps.out debian/dh_shlibdeps.err; \
+		:; \
+	else \
+		bin=debian/sdxi-cli/usr/bin/sdxi; \
+		needed=$$(readelf -d "$$bin" | sed -n 's/.*Shared library: \[\(.*\)\]/\1/p' | sort -u | tr '\n' ' '); \
+		unsupported=$$(printf '%s\n' $$needed | grep -Ev '^(libc\.so\.6|ld-linux.*\.so.*)$$' || true); \
+		if [ -n "$$unsupported" ]; then \
+			cat debian/dh_shlibdeps.out >&2; \
+			cat debian/dh_shlibdeps.err >&2; \
+			echo "dh_shlibdeps failed and fallback only supports libc-only binaries (needed: $$needed)" >&2; \
+			exit 1; \
+		fi; \
+		echo "dh_shlibdeps could not resolve host libc via dpkg; using generated libc6 dependency."; \
+		glibc_ver=$$(readelf --version-info "$$bin" | grep -Eo 'GLIBC_[0-9]+\.[0-9]+' | sed 's/GLIBC_//' | sort -Vu | tail -n1); \
+		sed -i '/^shlibs:Depends=/d' debian/sdxi-cli.substvars 2>/dev/null || true; \
+		if [ -n "$$glibc_ver" ]; then \
+			echo "shlibs:Depends=libc6 (>= $$glibc_ver)" >> debian/sdxi-cli.substvars; \
+		else \
+			echo "shlibs:Depends=libc6" >> debian/sdxi-cli.substvars; \
+		fi; \
+		rm -f debian/dh_shlibdeps.out debian/dh_shlibdeps.err; \
+	fi

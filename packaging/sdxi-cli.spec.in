@@ -1,0 +1,59 @@
+# RPM spec for sdxi-cli.
+#
+# This template is filled in by `make rpm`. The tarball it consumes is
+# self-contained: it bundles the libsdxi submodule sources alongside the
+# project tree so the spec builds everything from one source.
+
+Name:           sdxi-cli
+Version:        @VERSION@
+Release:        1%{?dist}
+Summary:        Command-line tool for SDXI devices and drivers
+License:        BSD-3-Clause
+URL:            https://github.com/AMDESE/sdxi-cli
+Source0:        %{name}-%{version}.tar.gz
+
+BuildRequires:  gcc
+BuildRequires:  make
+BuildRequires:  meson >= 0.61
+BuildRequires:  ninja-build
+BuildRequires:  pkgconfig
+BuildRequires:  autoconf
+BuildRequires:  automake
+BuildRequires:  libtool
+
+%description
+sdxi-cli is the user-space command-line interface for SDXI (Smart Data
+Accelerator Interface) devices. It uses libsdxi to talk to the kernel
+SDXI driver and exposes device discovery, attribute management, and AMD
+QoS extensions.
+
+%prep
+%setup -q
+
+%build
+# Build the in-tree libsdxi static library first; the sdxi binary links
+# it statically to keep the package self-contained.
+(cd libsdxi && \
+ ./autogen.sh && \
+ ./configure --quiet --with-pic && \
+ make %{?_smp_mflags})
+
+# Build sdxi-cli with meson directly so we control the install prefix.
+meson setup builddir \
+	--prefix=%{_prefix} \
+	--bindir=%{_bindir} \
+	--buildtype=plain \
+	--wrap-mode=nodownload
+meson compile -C builddir %{?_smp_mflags}
+
+%install
+DESTDIR=%{buildroot} meson install -C builddir --no-rebuild
+
+%files
+%license LICENSE
+%doc README.md
+%{_bindir}/sdxi
+
+%changelog
+* @CHANGELOG_DATE@ Build <build@localhost> - @VERSION@-1
+- Automated build from sdxi-cli git tree.
