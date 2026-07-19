@@ -270,13 +270,13 @@ static int amd_qos_consume_common(const char *prog, const char *usage,
 	}
 	if (strcmp(tok, "--timeout-ms") == 0) {
 		if (i + 1 >= argc) {
-			fprintf(stderr, "Missing argument for --timeout-ms\n");
+			fprintf(stderr, "Missing value for --timeout-ms.\n");
 			return -2;
 		}
 		st = amd_qos_parse_u32(argv[i + 1], timeout_io);
 		if (st) {
-			fprintf(stderr, "Invalid --timeout-ms: %s\n",
-				sdxi_err_str(st));
+			fprintf(stderr, "Invalid value for --timeout-ms '%s': %s.\n",
+				argv[i + 1], sdxi_err_str(st));
 			return -2;
 		}
 		*idx_io = i + 2;
@@ -335,7 +335,7 @@ bool amd_qos_parse_simple_cli_args(const char *prog, const char *usage,
 			continue;
 		}
 
-		fprintf(stderr, "Unknown option or extra argument `%s`\n",
+		fprintf(stderr, "Unknown option or extra argument: '%s'.\n",
 			argv[i]);
 		amd_qos_print_usage(prog, usage);
 		*rc_out = 1;
@@ -344,13 +344,13 @@ bool amd_qos_parse_simple_cli_args(const char *prog, const char *usage,
 
 	if (!out->dev_arg) {
 		fprintf(stderr,
-			"Device name is required (e.g., sdxi0 or /dev/sdxi0)\n");
+			"Missing required argument: <device> (for example, sdxi0 or /dev/sdxi0).\n");
 		amd_qos_print_usage(prog, usage);
 		*rc_out = 1;
 		return false;
 	}
 	if ((opts & AMD_QOS_OPT_MAXBW) && !out->maxbw_arg) {
-		fprintf(stderr, "Bandwidth argument is required\n");
+		fprintf(stderr, "Missing required argument: <bw>.\n");
 		amd_qos_print_usage(prog, usage);
 		*rc_out = 1;
 		return false;
@@ -395,18 +395,18 @@ bool amd_qos_parse_pool_cli_args(const char *prog, const char *usage,
 			int prc;
 
 			if (i + 1 >= argc) {
-				fprintf(stderr, "Missing argument for --pool\n");
+				fprintf(stderr, "Missing value for --pool.\n");
 				*rc_out = 1;
 				return false;
 			}
 			if (out->have_pool) {
-				fprintf(stderr, "--pool specified more than once\n");
+				fprintf(stderr, "--pool can be specified only once.\n");
 				*rc_out = 1;
 				return false;
 			}
 			prc = amd_qos_parse_pool_num(argv[i + 1], &out->pool_num);
 			if (prc) {
-				fprintf(stderr, "Invalid --pool `%s`: %s\n",
+				fprintf(stderr, "Invalid value for --pool '%s': %s.\n",
 					argv[i + 1], sdxi_err_str(prc));
 				*rc_out = 1;
 				return false;
@@ -417,12 +417,12 @@ bool amd_qos_parse_pool_cli_args(const char *prog, const char *usage,
 		}
 		if (strcmp(argv[i], "--minbw") == 0) {
 			if (i + 1 >= argc) {
-				fprintf(stderr, "Missing argument for --minbw\n");
+				fprintf(stderr, "Missing value for --minbw.\n");
 				*rc_out = 1;
 				return false;
 			}
 			if (out->minbw_arg) {
-				fprintf(stderr, "--minbw specified more than once\n");
+				fprintf(stderr, "--minbw can be specified only once.\n");
 				*rc_out = 1;
 				return false;
 			}
@@ -432,12 +432,12 @@ bool amd_qos_parse_pool_cli_args(const char *prog, const char *usage,
 		}
 		if (strcmp(argv[i], "--maxbw") == 0) {
 			if (i + 1 >= argc) {
-				fprintf(stderr, "Missing argument for --maxbw\n");
+				fprintf(stderr, "Missing value for --maxbw.\n");
 				*rc_out = 1;
 				return false;
 			}
 			if (out->maxbw_arg) {
-				fprintf(stderr, "--maxbw specified more than once\n");
+				fprintf(stderr, "--maxbw can be specified only once.\n");
 				*rc_out = 1;
 				return false;
 			}
@@ -446,7 +446,7 @@ bool amd_qos_parse_pool_cli_args(const char *prog, const char *usage,
 			continue;
 		}
 
-		fprintf(stderr, "Unknown option or extra argument `%s`\n",
+		fprintf(stderr, "Unknown option or extra argument: '%s'.\n",
 			argv[i]);
 		amd_qos_print_usage(prog, usage);
 		*rc_out = 1;
@@ -455,7 +455,7 @@ bool amd_qos_parse_pool_cli_args(const char *prog, const char *usage,
 
 	if (!out->dev_arg) {
 		fprintf(stderr,
-			"Device name is required (e.g., sdxi0 or /dev/sdxi0)\n");
+			"Missing required argument: <device> (for example, sdxi0 or /dev/sdxi0).\n");
 		amd_qos_print_usage(prog, usage);
 		*rc_out = 1;
 		return false;
@@ -500,18 +500,18 @@ bool amd_qos_parse_assign_cli_args(const char *prog, const char *usage,
 			int prc;
 
 			if (i + 1 >= argc) {
-				fprintf(stderr, "Missing argument for --pool\n");
+				fprintf(stderr, "Missing value for --pool.\n");
 				*rc_out = 1;
 				return false;
 			}
 			if (out->have_pool) {
-				fprintf(stderr, "--pool specified more than once\n");
+				fprintf(stderr, "--pool can be specified only once.\n");
 				*rc_out = 1;
 				return false;
 			}
 			prc = amd_qos_parse_pool_num(argv[i + 1], &out->pool_num);
 			if (prc) {
-				fprintf(stderr, "Invalid --pool `%s`: %s\n",
+				fprintf(stderr, "Invalid value for --pool '%s': %s.\n",
 					argv[i + 1], sdxi_err_str(prc));
 				*rc_out = 1;
 				return false;
@@ -524,18 +524,18 @@ bool amd_qos_parse_assign_cli_args(const char *prog, const char *usage,
 			int prc;
 
 			if (i + 1 >= argc) {
-				fprintf(stderr, "Missing argument for --vf\n");
+				fprintf(stderr, "Missing value for --vf.\n");
 				*rc_out = 1;
 				return false;
 			}
 			if (out->vf) {
-				fprintf(stderr, "--vf specified more than once\n");
+				fprintf(stderr, "--vf can be specified only once.\n");
 				*rc_out = 1;
 				return false;
 			}
 			prc = amd_qos_parse_u16_str(argv[i + 1], &out->vf_num);
 			if (prc) {
-				fprintf(stderr, "Invalid --vf `%s`: %s\n",
+				fprintf(stderr, "Invalid value for --vf '%s': %s.\n",
 					argv[i + 1], sdxi_err_str(prc));
 				*rc_out = 1;
 				return false;
@@ -548,19 +548,19 @@ bool amd_qos_parse_assign_cli_args(const char *prog, const char *usage,
 			int prc;
 
 			if (i + 1 >= argc) {
-				fprintf(stderr, "Missing argument for --cxt\n");
+				fprintf(stderr, "Missing value for --cxt.\n");
 				*rc_out = 1;
 				return false;
 			}
 			if (out->cxt) {
-				fprintf(stderr, "--cxt specified more than once\n");
+				fprintf(stderr, "--cxt can be specified only once.\n");
 				*rc_out = 1;
 				return false;
 			}
 			prc = amd_qos_parse_cxt_arg(argv[i + 1], &out->cxt_start,
 						    &out->cxt_end);
 			if (prc) {
-				fprintf(stderr, "Invalid --cxt `%s`\n",
+				fprintf(stderr, "Invalid value for --cxt '%s'.\n",
 					argv[i + 1]);
 				*rc_out = 1;
 				return false;
@@ -570,7 +570,7 @@ bool amd_qos_parse_assign_cli_args(const char *prog, const char *usage,
 			continue;
 		}
 
-		fprintf(stderr, "Unknown option or extra argument `%s`\n",
+		fprintf(stderr, "Unknown option or extra argument: '%s'.\n",
 			argv[i]);
 		amd_qos_print_usage(prog, usage);
 		*rc_out = 1;
@@ -579,13 +579,13 @@ bool amd_qos_parse_assign_cli_args(const char *prog, const char *usage,
 
 	if (!out->dev_arg) {
 		fprintf(stderr,
-			"Device name is required (e.g., sdxi0 or /dev/sdxi0)\n");
+			"Missing required argument: <device> (for example, sdxi0 or /dev/sdxi0).\n");
 		amd_qos_print_usage(prog, usage);
 		*rc_out = 1;
 		return false;
 	}
 	if (require_pool && !out->have_pool) {
-		fprintf(stderr, "--pool is required\n");
+		fprintf(stderr, "Missing required option: --pool.\n");
 		amd_qos_print_usage(prog, usage);
 		*rc_out = 1;
 		return false;

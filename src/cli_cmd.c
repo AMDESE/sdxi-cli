@@ -112,7 +112,7 @@ int sdxi_cli_cmd_invoke(const char *prog, const struct sdxi_cli_cmd *cmd,
 
 		sub = sdxi_cli_cmd_find(cmd->subcmds, argv[0]);
 		if (!sub) {
-			fprintf(stderr, "Unknown subcommand `%s`.\n\n", argv[0]);
+			fprintf(stderr, "Unknown subcommand: '%s'.\n\n", argv[0]);
 			sdxi_cli_cmd_print_help(prog, cmd);
 			return 1;
 		}
@@ -127,4 +127,3 @@ int sdxi_cli_cmd_invoke(const char *prog, const struct sdxi_cli_cmd *cmd,
 
 	return cmd->fn(prog, argc, argv);
 }
-

@@ -109,7 +109,7 @@ static void print_general_help(const char *prog)
 		print_vendor_list(padding);
 	}
 
-	printf("\nRun `%s help <command...>` for more details.\n", prog);
+	printf("\nRun '%s help <command...>' for more details.\n", prog);
 }
 
 static int sdxi_cmd_help(const char *prog, int argc, char **argv)
@@ -126,14 +126,14 @@ static int sdxi_cmd_help(const char *prog, int argc, char **argv)
 	cmd = find_root_command(argv[0]);
 
 	if (!cmd) {
-		fprintf(stderr, "Unknown command `%s`.\n\n", argv[0]);
+		fprintf(stderr, "Unknown command: '%s'.\n\n", argv[0]);
 		print_general_help(prog);
 		return 1;
 	}
 
 	for (i = 1; i < argc; i++) {
 		if (!cmd->subcmds) {
-			fprintf(stderr, "Command `%s` has no subcommands.\n\n",
+			fprintf(stderr, "Command '%s' has no subcommands.\n\n",
 				cmd->name);
 			sdxi_cli_cmd_print_help(prog, cmd);
 			return 1;
@@ -141,7 +141,7 @@ static int sdxi_cmd_help(const char *prog, int argc, char **argv)
 
 		next = sdxi_cli_cmd_find(cmd->subcmds, argv[i]);
 		if (!next) {
-			fprintf(stderr, "Unknown subcommand `%s`.\n\n", argv[i]);
+			fprintf(stderr, "Unknown subcommand: '%s'.\n\n", argv[i]);
 			sdxi_cli_cmd_print_help(prog, cmd);
 			return 1;
 		}
@@ -483,14 +483,14 @@ static int sdxi_cmd_devices(const char *prog, int argc, char **argv)
 			continue;
 		}
 
-		fprintf(stderr, "Unknown option `%s`\n\n", argv[i]);
+		fprintf(stderr, "Unknown option: '%s'.\n\n", argv[i]);
 		printf("Usage: %s devices [--json]\n", prog);
 		return 1;
 	}
 
 	st = sdxi_list_devs(&dev_list, &dev_count);
 	if (st) {
-		fprintf(stderr, "Failed to enumerate SDXI devices: %s\n",
+		fprintf(stderr, "Failed to enumerate SDXI devices: %s.\n",
 			sdxi_err_str(st));
 		return 1;
 	}
@@ -506,14 +506,14 @@ static int sdxi_cmd_devices(const char *prog, int argc, char **argv)
 
 	used_count = dev_count;
 	if (used_count > SDXI_MAX_DEVICES) {
-		fprintf(stderr, "Warning: truncating device list (%zu -> %u)\n",
+		fprintf(stderr, "Warning: device list truncated from %zu to %u entries.\n",
 			used_count, SDXI_MAX_DEVICES);
 		used_count = SDXI_MAX_DEVICES;
 	}
 
 	entries = calloc(used_count, sizeof(*entries));
 	if (!entries) {
-		fprintf(stderr, "Out of memory\n");
+		fprintf(stderr, "Out of memory.\n");
 		sdxi_free_dev_list(dev_list, dev_count);
 		return 1;
 	}
@@ -679,33 +679,33 @@ static int sdxi_cmd_show(const char *prog, int argc, char **argv)
 			continue;
 		}
 
-		fprintf(stderr, "Unknown option or extra argument `%s`\n", argv[i]);
+		fprintf(stderr, "Unknown option or extra argument: '%s'.\n", argv[i]);
 		printf("Usage: %s show <device> [--json] [-v|--verbose]\n", prog);
 		return 1;
 	}
 
 	if (!device_arg || device_arg[0] == '\0') {
-		fprintf(stderr, "Device name is required (e.g., sdxi0 or /dev/sdxi0)\n");
+		fprintf(stderr, "Missing required argument: <device> (for example, sdxi0 or /dev/sdxi0).\n");
 		printf("Usage: %s show <device> [--json] [-v|--verbose]\n", prog);
 		return 1;
 	}
 
 	st = dev_path_from_arg(device_arg, path_buf, sizeof(path_buf), &path);
 	if (st) {
-		fprintf(stderr, "Invalid device path: %s\n", sdxi_err_str(st));
+		fprintf(stderr, "Invalid device path: %s.\n", sdxi_err_str(st));
 		return 1;
 	}
 
 	st = sdxi_dev_open(path, &dev);
 	if (st) {
-		fprintf(stderr, "Failed to open %s: %s\n", path, sdxi_err_str(st));
+		fprintf(stderr, "Failed to open %s: %s.\n", path, sdxi_err_str(st));
 		return 1;
 	}
 
 	st = sdxi_dev_get_caps(dev, &caps);
 	sdxi_dev_close(dev);
 	if (st) {
-		fprintf(stderr, "Failed to get device info for %s: %s\n",
+		fprintf(stderr, "Failed to read device info for %s: %s.\n",
 			path, sdxi_err_str(st));
 		return 1;
 	}
@@ -728,7 +728,7 @@ static int invoke_cmd(const char *prog, const char *cmd, int argc, char **argv)
 	const struct sdxi_cli_cmd *entry = find_root_command(cmd);
 
 	if (!entry) {
-		fprintf(stderr, "Invalid command `%s`.\n\n", cmd);
+		fprintf(stderr, "Unknown command: '%s'.\n\n", cmd);
 		print_general_help(prog);
 		return 1;
 	}

@@ -335,7 +335,7 @@ static int parse_attr_value(enum sdxi_dev_attr_id attr, const char *s,
 	case SDXI_DEV_ATTR_ID_GSR:
 		st = parse_u64(s, &v);
 		if (st || v > UINT8_MAX) {
-			snprintf(errbuf, errlen, "expected u8 value");
+			snprintf(errbuf, errlen, "expected an 8-bit unsigned integer");
 			return -EINVAL;
 		}
 		*raw_out = v;
@@ -344,7 +344,7 @@ static int parse_attr_value(enum sdxi_dev_attr_id attr, const char *s,
 	case SDXI_DEV_ATTR_ID_GRP_ID:
 		st = parse_u64(s, &v);
 		if (st || v > UINT32_MAX) {
-			snprintf(errbuf, errlen, "expected u32 value");
+			snprintf(errbuf, errlen, "expected a 32-bit unsigned integer");
 			return -EINVAL;
 		}
 		*raw_out = v;
@@ -360,17 +360,17 @@ static int parse_attr_value(enum sdxi_dev_attr_id attr, const char *s,
 		}
 		st = parse_u64_bytes(s, &bytes);
 		if (st) {
-			snprintf(errbuf, errlen, "invalid byte size `%s`", s);
+			snprintf(errbuf, errlen, "invalid byte size '%s'", s);
 			return st;
 		}
 		if (log2_u64_pow2(bytes, &log2) || log2 < 21) {
 			snprintf(errbuf, errlen,
-				 "max_buffer must be a power-of-two >= 2 MiB");
+				 "max_buffer must be a power of two and at least 2 MiB");
 			return -EINVAL;
 		}
 		if (log2 - 21 > 15) {
 			snprintf(errbuf, errlen,
-				 "max_buffer encoding out of range (need <= 15)");
+				 "max_buffer encoding must be 15 or less");
 			return -ERANGE;
 		}
 		*raw_out = log2 - 21;
@@ -387,17 +387,17 @@ static int parse_attr_value(enum sdxi_dev_attr_id attr, const char *s,
 		}
 		st = parse_u64(s, &entries);
 		if (st) {
-			snprintf(errbuf, errlen, "invalid entry count `%s`", s);
+			snprintf(errbuf, errlen, "invalid entry count '%s'", s);
 			return st;
 		}
 		if (log2_u64_pow2(entries, &log2) || log2 < 8) {
 			snprintf(errbuf, errlen,
-				 "key size must be a power-of-two >= 256 entries");
+				 "key size must be a power of two and at least 256 entries");
 			return -EINVAL;
 		}
 		if (log2 - 8 > 15) {
 			snprintf(errbuf, errlen,
-				 "key size encoding out of range (need <= 15)");
+				 "key size encoding must be 15 or less");
 			return -ERANGE;
 		}
 		*raw_out = log2 - 8;
@@ -414,7 +414,7 @@ static int parse_attr_value(enum sdxi_dev_attr_id attr, const char *s,
 		 */
 		st = parse_u64(s, &v);
 		if (st) {
-			snprintf(errbuf, errlen, "invalid entry count `%s`", s);
+			snprintf(errbuf, errlen, "invalid entry count '%s'", s);
 			return st;
 		}
 		*raw_out = v;
@@ -423,15 +423,15 @@ static int parse_attr_value(enum sdxi_dev_attr_id attr, const char *s,
 	case SDXI_DEV_ATTR_ID_MAX_CXT: {
 		st = parse_u64(s, &v);
 		if (st) {
-			snprintf(errbuf, errlen, "invalid context count `%s`", s);
+			snprintf(errbuf, errlen, "invalid context count '%s'", s);
 			return st;
 		}
 		if (v == 0) {
-			snprintf(errbuf, errlen, "max_cxt must be >= 1");
+			snprintf(errbuf, errlen, "max_cxt must be at least 1");
 			return -EINVAL;
 		}
 		if (v > 65536) {
-			snprintf(errbuf, errlen, "max_cxt must be <= 65536");
+			snprintf(errbuf, errlen, "max_cxt must be 65536 or less");
 			return -ERANGE;
 		}
 		*raw_out = v - 1;
@@ -469,13 +469,13 @@ static int open_dev_for_arg(const char *device_arg, sdxi_dev_t **dev_out,
 
 	st = dev_path_from_arg(device_arg, path_buf, path_buflen, path_out);
 	if (st) {
-		fprintf(stderr, "Invalid device path: %s\n", sdxi_err_str(st));
+		fprintf(stderr, "Invalid device path: %s.\n", sdxi_err_str(st));
 		return st;
 	}
 
 	st = sdxi_dev_open(*path_out, dev_out);
 	if (st) {
-		fprintf(stderr, "Failed to open %s: %s\n", *path_out,
+		fprintf(stderr, "Failed to open %s: %s.\n", *path_out,
 			sdxi_err_str(st));
 		return st;
 	}
@@ -548,7 +548,7 @@ static int do_attr_get(const char *prog, const char *device_arg,
 
 	st = sdxi_dev_attr_by_name(attr_name, &attr);
 	if (st) {
-		fprintf(stderr, "Unknown attribute `%s`\n", attr_name);
+		fprintf(stderr, "Unknown attribute: '%s'.\n", attr_name);
 		return 1;
 	}
 
@@ -595,19 +595,19 @@ static int do_attr_set(const char *prog, const char *device_arg,
 
 	st = sdxi_dev_attr_by_name(attr_name, &attr);
 	if (st) {
-		fprintf(stderr, "Unknown attribute `%s`\n", attr_name);
+		fprintf(stderr, "Unknown attribute: '%s'.\n", attr_name);
 		return 1;
 	}
 
 	if (!sdxi_dev_attr_is_writable(attr)) {
-		fprintf(stderr, "Attribute `%s` is read-only\n",
+		fprintf(stderr, "Attribute '%s' is read-only.\n",
 			sdxi_dev_attr_name(attr));
 		return 1;
 	}
 
 	st = parse_attr_value(attr, value_str, &raw, errbuf, sizeof(errbuf));
 	if (st) {
-		fprintf(stderr, "Invalid value for %s: %s\n",
+		fprintf(stderr, "Invalid value for %s: %s.\n",
 			sdxi_dev_attr_name(attr),
 			errbuf[0] ? errbuf : sdxi_err_str(st));
 		return 1;
@@ -621,12 +621,12 @@ static int do_attr_set(const char *prog, const char *device_arg,
 	st = sdxi_dev_set_attr(dev, attr, &raw);
 	sdxi_dev_close(dev);
 	if (st) {
-		fprintf(stderr, "Failed to set %s on %s: %s (%s)\n",
+		fprintf(stderr, "Failed to set %s on %s: %s (%s).\n",
 			sdxi_dev_attr_name(attr), path, sdxi_err_name(st),
 			set_attr_err_str(attr, st));
 		if (st == -EPERM || st == -EACCES)
 			fprintf(stderr,
-				"Hint: setting device attributes typically requires CAP_SYS_ADMIN\n");
+				"Hint: setting device attributes usually requires CAP_SYS_ADMIN.\n");
 		return 1;
 	}
 
@@ -637,7 +637,7 @@ static int do_attr_set(const char *prog, const char *device_arg,
 	 */
 	{
 		struct attr_print_ctx ctx = { .json = false, .first = true };
-		printf("Set %s on %s -> applied value:\n",
+		printf("Set %s on %s. Applied value:\n",
 		       sdxi_dev_attr_name(attr), path);
 		emit_attr(&ctx, attr, sdxi_dev_attr_name(attr), true, raw, 0);
 	}
@@ -689,7 +689,7 @@ int sdxi_cmd_attrs(const char *prog, int argc, char **argv)
 			continue;
 		}
 
-		fprintf(stderr, "Unknown option or extra argument `%s`\n",
+		fprintf(stderr, "Unknown option or extra argument: '%s'.\n",
 			argv[i]);
 		usage_attrs(prog);
 		return 1;
@@ -697,7 +697,7 @@ int sdxi_cmd_attrs(const char *prog, int argc, char **argv)
 
 	if (!device_arg) {
 		fprintf(stderr,
-			"Device name is required (e.g., sdxi0 or /dev/sdxi0)\n");
+			"Missing required argument: <device> (for example, sdxi0 or /dev/sdxi0).\n");
 		usage_attrs(prog);
 		return 1;
 	}
@@ -734,14 +734,14 @@ int sdxi_cmd_attr(const char *prog, int argc, char **argv)
 			continue;
 		}
 
-		fprintf(stderr, "Unknown option or extra argument `%s`\n",
+		fprintf(stderr, "Unknown option or extra argument: '%s'.\n",
 			argv[i]);
 		usage_attr(prog);
 		return 1;
 	}
 
 	if (!device_arg || !attr_name) {
-		fprintf(stderr, "Device and attr are required\n");
+		fprintf(stderr, "Missing required arguments: <device> and <attr>.\n");
 		usage_attr(prog);
 		return 1;
 	}
@@ -778,13 +778,13 @@ int sdxi_cmd_set_attr(const char *prog, int argc, char **argv)
 			continue;
 		}
 
-		fprintf(stderr, "Extra argument `%s`\n", argv[i]);
+		fprintf(stderr, "Extra argument: '%s'.\n", argv[i]);
 		usage_set_attr(prog);
 		return 1;
 	}
 
 	if (!device_arg || !attr_name || !value_str) {
-		fprintf(stderr, "Device, attr, and value are required\n");
+		fprintf(stderr, "Missing required arguments: <device>, <attr>, and <value>.\n");
 		usage_set_attr(prog);
 		return 1;
 	}

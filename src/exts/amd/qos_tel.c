@@ -101,20 +101,20 @@ int amd_qos_open_supported(const char *dev_arg, bool json,
 	st = amd_qos_dev_path_from_arg(dev_arg, ctx->path_buf,
 				       sizeof(ctx->path_buf), &ctx->path);
 	if (st) {
-		fprintf(stderr, "Invalid device path: %s\n", sdxi_err_str(st));
+		fprintf(stderr, "Invalid device path: %s.\n", sdxi_err_str(st));
 		return 1;
 	}
 
 	st = sdxi_dev_open(ctx->path, &ctx->dev);
 	if (st) {
-		fprintf(stderr, "Failed to open %s: %s\n", ctx->path,
+		fprintf(stderr, "Failed to open %s: %s.\n", ctx->path,
 			sdxi_err_str(st));
 		return 1;
 	}
 
 	st = sdxi_dev_get_caps(ctx->dev, &ctx->caps);
 	if (st) {
-		fprintf(stderr, "Failed to read device caps for %s: %s\n",
+		fprintf(stderr, "Failed to read device caps for %s: %s.\n",
 			ctx->path, sdxi_err_str(st));
 		goto err;
 	}
@@ -162,14 +162,19 @@ int amd_qos_report_vendor_error(const char *path, bool json, int st,
 		return 1;
 	}
 	if (st == -ENOTSUP) {
+		char reason[128];
+
+		snprintf(reason, sizeof(reason),
+			 "QoS vendor operation is not supported on this PF (%s)",
+			 op_desc ? op_desc : "operation");
 		amd_qos_print_unsupported(path, json,
-					 "qos_vendor_handler_not_present",
-					 "QoS vendor handler not present on this PF");
+					 "qos_vendor_operation_not_supported",
+					 reason);
 		return 1;
 	}
 
-	fprintf(stderr, "AMD QoS %s failed: %s (%d): %s\n",
-		op_desc, sdxi_err_name(st), st, sdxi_err_str(st));
+	fprintf(stderr, "AMD QoS %s failed: %s (%d).\n",
+		op_desc, sdxi_err_name(st), st);
 	return 1;
 }
 
@@ -474,8 +479,8 @@ int amd_qos_pool_round_bw(const char *label, const char *raw,
 	if (!json && *requested_out != *effective_out) {
 		fprintf(stderr,
 			"Warning: requested %s %" PRIu32
-			" MB/s rounded down to %" PRIu32
-			" MB/s to match device granularity %" PRIu32 " MB/s.\n",
+			" MB/s was rounded down to %" PRIu32
+			" MB/s for device granularity %" PRIu32 " MB/s.\n",
 			label, *requested_out, *effective_out, granularity_bw);
 	}
 

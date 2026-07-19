@@ -616,10 +616,11 @@ int amd_qos_emit_underallocated_maxbw(const char *path, bool json,
 	}
 
 	fprintf(stderr,
-		"Requested %" PRIu32 " MB/s becomes %" PRIu32
-		" MB/s, below total_allocated_bw %" PRIu32 " MB/s.\n",
+		"Requested device_maxbw %" PRIu32 " MB/s becomes %" PRIu32
+		" MB/s after rounding, below total_allocated_bw %" PRIu32 " MB/s.\n",
 		requested_maxbw, effective_maxbw, total_allocated_bw);
-	fprintf(stderr, "Reduce pool allocations first.\n");
+	fprintf(stderr,
+		"Reduce pool minimum bandwidths before lowering device_maxbw.\n");
 	return 1;
 }
 
@@ -662,7 +663,10 @@ int amd_qos_emit_pool_minbw_overflow(const char *path, bool json,
 	fprintf(stderr,
 		"Pool minima would become %" PRIu64 " MB/s, above device_maxbw %" PRIu32 " MB/s.\n",
 		projected_total, device_maxbw);
-	fprintf(stderr, "Reduce existing pool minima or raise device bandwidth first.\n");
+	fprintf(stderr,
+		"The sum of all pool minimum bandwidths must fit within current device_maxbw.\n");
+	fprintf(stderr,
+		"Reduce another pool's minimum bandwidth, or raise device_maxbw first if it is below the device capability.\n");
 	return 1;
 }
 

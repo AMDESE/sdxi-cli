@@ -165,7 +165,7 @@ int amd_qos_cmd_set_maxbw(const char *prog, int argc, char **argv)
 
 	st = amd_qos_parse_bw_mb_s(args.maxbw_arg, &requested_maxbw);
 	if (st) {
-		fprintf(stderr, "Invalid bandwidth `%s`: %s\n", args.maxbw_arg,
+		fprintf(stderr, "Invalid bandwidth '%s': %s.\n", args.maxbw_arg,
 			amd_qos_bw_err_str(st));
 		return 1;
 	}
@@ -189,8 +189,8 @@ int amd_qos_cmd_set_maxbw(const char *prog, int argc, char **argv)
 	if (!args.json && requested_maxbw != effective_maxbw) {
 		fprintf(stderr,
 			"Warning: requested max bandwidth %" PRIu32
-			" MB/s rounded down to %" PRIu32
-			" MB/s to match device granularity %" PRIu32 " MB/s.\n",
+			" MB/s was rounded down to %" PRIu32
+			" MB/s for device granularity %" PRIu32 " MB/s.\n",
 			requested_maxbw, effective_maxbw,
 			cap.granularity_bw_mb_s);
 	}
@@ -234,7 +234,7 @@ int amd_qos_cmd_set_maxbw(const char *prog, int argc, char **argv)
 	amd_qos_ctx_cleanup(&ctx);
 	if (st) {
 		fprintf(stderr,
-			"AMD QoS device update completed, but post-update telemetry query failed: %s\n",
+			"Device max bandwidth was updated, but post-update telemetry failed: %s.\n",
 			sdxi_err_str(st));
 		return 1;
 	}
@@ -247,7 +247,7 @@ int amd_qos_cmd_set_maxbw(const char *prog, int argc, char **argv)
 	if (!args.json && tel.device_maxbw_mb_s != effective_maxbw) {
 		fprintf(stderr,
 			"Warning: device applied %" PRIu32
-			" MB/s after update request of %" PRIu32 " MB/s.\n",
+			" MB/s instead of requested %" PRIu32 " MB/s.\n",
 			tel.device_maxbw_mb_s, effective_maxbw);
 	}
 
@@ -275,12 +275,12 @@ int amd_qos_cmd_pool_show(const char *prog, int argc, char **argv)
 					 argv, &args, &rc))
 		return rc;
 	if (!args.have_pool) {
-		fprintf(stderr, "--pool is required\n");
+		fprintf(stderr, "Missing required option: --pool.\n");
 		amd_qos_print_usage(prog, AMD_QOS_POOL_SHOW_USAGE);
 		return 1;
 	}
 	if (args.minbw_arg || args.maxbw_arg) {
-		fprintf(stderr, "pool-show does not accept --minbw or --maxbw\n");
+		fprintf(stderr, "pool-show does not accept --minbw or --maxbw.\n");
 		amd_qos_print_usage(prog, AMD_QOS_POOL_SHOW_USAGE);
 		return 1;
 	}
@@ -301,8 +301,8 @@ int amd_qos_cmd_pool_show(const char *prog, int argc, char **argv)
 	if (st) {
 		amd_qos_ctx_cleanup(&ctx);
 		fprintf(stderr,
-			"Pool %" PRIu16 " is out of range (max_pools=%" PRIu16 ")\n",
-			args.pool_num, cap.max_pools);
+			"Pool %" PRIu16 " is out of range; valid range is 0..%" PRIu16 ".\n",
+			args.pool_num, cap.max_pools ? cap.max_pools - 1 : 0);
 		return 1;
 	}
 
@@ -345,7 +345,7 @@ static int amd_qos_cmd_pools_common(const char *prog, int argc, char **argv,
 		return rc;
 	if (args.have_pool || args.minbw_arg || args.maxbw_arg) {
 		fprintf(stderr,
-			"%s does not accept --pool, --minbw, or --maxbw\n",
+			"%s does not accept --pool, --minbw, or --maxbw.\n",
 			active_only ? "active-pools" : "pools");
 		amd_qos_print_usage(prog, usage);
 		return 1;
@@ -364,7 +364,7 @@ static int amd_qos_cmd_pools_common(const char *prog, int argc, char **argv,
 	}
 	if (cap.max_pools == 0) {
 		amd_qos_ctx_cleanup(&ctx);
-		fprintf(stderr, "Device reports no QoS pools\n");
+		fprintf(stderr, "Device reports no QoS pools.\n");
 		return 1;
 	}
 
@@ -398,7 +398,7 @@ static int amd_qos_cmd_pools_common(const char *prog, int argc, char **argv,
 	if (!cfgs) {
 		amd_qos_active_pools_cleanup(&active);
 		amd_qos_ctx_cleanup(&ctx);
-		fprintf(stderr, "Out of memory\n");
+		fprintf(stderr, "Out of memory.\n");
 		return 1;
 	}
 
@@ -473,7 +473,7 @@ static int amd_qos_cmd_pool_create_update_common(const char *prog, int argc,
 	if (!amd_qos_parse_pool_cli_args(prog, usage, argc, argv, &args, &rc))
 		return rc;
 	if (!args.have_pool || !args.minbw_arg || !args.maxbw_arg) {
-		fprintf(stderr, "--pool, --minbw, and --maxbw are required\n");
+		fprintf(stderr, "Missing required options: --pool, --minbw, and --maxbw.\n");
 		amd_qos_print_usage(prog, usage);
 		return 1;
 	}
@@ -494,11 +494,11 @@ static int amd_qos_cmd_pool_create_update_common(const char *prog, int argc,
 	if (st) {
 		amd_qos_ctx_cleanup(&ctx);
 		if (args.pool_num == 0 && create)
-			fprintf(stderr, "Pool 0 cannot be created\n");
+			fprintf(stderr, "Pool 0 cannot be created.\n");
 		else
 			fprintf(stderr,
-				"Pool %" PRIu16 " is out of range (max_pools=%" PRIu16 ")\n",
-				args.pool_num, cap.max_pools);
+				"Pool %" PRIu16 " is out of range; valid range is 1..%" PRIu16 ".\n",
+				args.pool_num, cap.max_pools ? cap.max_pools - 1 : 0);
 		return 1;
 	}
 
@@ -507,7 +507,7 @@ static int amd_qos_cmd_pool_create_update_common(const char *prog, int argc,
 				   &requested_minbw, &effective_minbw);
 	if (st) {
 		amd_qos_ctx_cleanup(&ctx);
-		fprintf(stderr, "Invalid --minbw `%s`: %s\n", args.minbw_arg,
+		fprintf(stderr, "Invalid value for --minbw '%s': %s.\n", args.minbw_arg,
 			amd_qos_bw_err_str(st));
 		return 1;
 	}
@@ -516,7 +516,7 @@ static int amd_qos_cmd_pool_create_update_common(const char *prog, int argc,
 				   &requested_maxbw, &effective_maxbw);
 	if (st) {
 		amd_qos_ctx_cleanup(&ctx);
-		fprintf(stderr, "Invalid --maxbw `%s`: %s\n", args.maxbw_arg,
+		fprintf(stderr, "Invalid value for --maxbw '%s': %s.\n", args.maxbw_arg,
 			amd_qos_bw_err_str(st));
 		return 1;
 	}
@@ -587,7 +587,9 @@ static int amd_qos_cmd_pool_create_update_common(const char *prog, int argc,
 	    !(cap.feature_flags & SDXI_AMD_QOS_FEATURE_DYNAMIC_POOL_RECONFIG) &&
 	    !args.json) {
 		fprintf(stderr,
-			"Warning: Dynamic Pool Reconfiguration is not advertised; stop affected contexts before updating.\n");
+			"Warning: Dynamic Pool Reconfiguration is not advertised; this update may be rejected while the pool has assigned functions or contexts.\n");
+		fprintf(stderr,
+			"Stop or reassign affected resources before changing this pool's bandwidth limits.\n");
 	}
 
 	memset(&cpl, 0, sizeof(cpl));
@@ -616,9 +618,9 @@ static int amd_qos_cmd_pool_create_update_common(const char *prog, int argc,
 	     cfg.pool_maxbw_mb_s != effective_maxbw)) {
 		fprintf(stderr,
 			"Warning: device applied min/max %" PRIu32 "/%" PRIu32
-			" MB/s after %s request %" PRIu32 "/%" PRIu32 " MB/s.\n",
-			cfg.pool_minbw_mb_s, cfg.pool_maxbw_mb_s, operation,
-			effective_minbw, effective_maxbw);
+			" MB/s instead of requested %" PRIu32 "/%" PRIu32 " MB/s.\n",
+			cfg.pool_minbw_mb_s, cfg.pool_maxbw_mb_s, effective_minbw,
+			effective_maxbw);
 	}
 
 	amd_qos_print_pool_update_result(path, args.json, operation, &cap,
@@ -657,13 +659,13 @@ int amd_qos_cmd_pool_destroy(const char *prog, int argc, char **argv)
 					 argv, &args, &rc))
 		return rc;
 	if (!args.have_pool) {
-		fprintf(stderr, "--pool is required\n");
+		fprintf(stderr, "Missing required option: --pool.\n");
 		amd_qos_print_usage(prog, AMD_QOS_POOL_DESTROY_USAGE);
 		return 1;
 	}
 	if (args.minbw_arg || args.maxbw_arg) {
 		fprintf(stderr,
-			"pool-destroy does not accept --minbw or --maxbw\n");
+			"pool-destroy does not accept --minbw or --maxbw.\n");
 		amd_qos_print_usage(prog, AMD_QOS_POOL_DESTROY_USAGE);
 		return 1;
 	}
@@ -684,11 +686,11 @@ int amd_qos_cmd_pool_destroy(const char *prog, int argc, char **argv)
 	if (st) {
 		amd_qos_ctx_cleanup(&ctx);
 		if (args.pool_num == 0)
-			fprintf(stderr, "Pool 0 cannot be destroyed\n");
+			fprintf(stderr, "Pool 0 cannot be destroyed.\n");
 		else
 			fprintf(stderr,
-				"Pool %" PRIu16 " is out of range (max_pools=%" PRIu16 ")\n",
-				args.pool_num, cap.max_pools);
+				"Pool %" PRIu16 " is out of range; valid range is 1..%" PRIu16 ".\n",
+				args.pool_num, cap.max_pools ? cap.max_pools - 1 : 0);
 		return 1;
 	}
 
@@ -711,7 +713,7 @@ int amd_qos_cmd_pool_destroy(const char *prog, int argc, char **argv)
 	if (amd_qos_active_pool_test(&active, args.pool_num)) {
 		amd_qos_active_pools_cleanup(&active);
 		fprintf(stderr,
-			"Pool %" PRIu16 " still appears active after destroy.\n",
+			"Pool %" PRIu16 " is still active after destroy.\n",
 			args.pool_num);
 		return 1;
 	}
@@ -768,7 +770,7 @@ int amd_qos_cmd_show_assignment(const char *prog, int argc, char **argv)
 		return rc;
 	if (args.cxt && args.cxt_start != args.cxt_end) {
 		fprintf(stderr,
-			"show-assignment requires a single --cxt id (no range)\n");
+			"show-assignment requires a single --cxt value; ranges are not supported.\n");
 		amd_qos_print_usage(prog, AMD_QOS_SHOW_ASSIGNMENT_USAGE);
 		return 1;
 	}
@@ -847,8 +849,8 @@ int amd_qos_cmd_assign(const char *prog, int argc, char **argv)
 	if (st) {
 		amd_qos_ctx_cleanup(&ctx);
 		fprintf(stderr,
-			"Pool %" PRIu16 " is out of range (max_pools=%" PRIu16 ")\n",
-			args.pool_num, cap.max_pools);
+			"Pool %" PRIu16 " is out of range; valid range is 0..%" PRIu16 ".\n",
+			args.pool_num, cap.max_pools ? cap.max_pools - 1 : 0);
 		return 1;
 	}
 
@@ -875,12 +877,6 @@ int amd_qos_cmd_assign(const char *prog, int argc, char **argv)
 	if (st) {
 		amd_qos_ctx_cleanup(&ctx);
 		return st;
-	}
-
-	if (!(cap.feature_flags & SDXI_AMD_QOS_FEATURE_DYNAMIC_POOL_REASSIGN) &&
-	    !args.json) {
-		fprintf(stderr,
-			"Warning: Dynamic Pool Reassignment is not advertised; stop affected contexts or functions before reassigning.\n");
 	}
 
 	memset(&cpl, 0, sizeof(cpl));
