@@ -1,3 +1,4 @@
 [submodule "libsdxi"]
 	path = libsdxi
 	url = https://github.com/AMDESE/libsdxi.git
+	branch = sdxi-phase2-upstream-v1
